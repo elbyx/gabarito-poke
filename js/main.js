@@ -1,36 +1,42 @@
-const limit = 10;
+const limit = 50;
 const offset = 0;
 const url = `https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`;
+const pokemonList = document.getElementById("pokemonList");
 
-const convertPokemonToLi = (pokemon) => {
+function getTypeLi(types){
     return `
-        <li class="pokemon">
-                <div class="number">#001</div>
-                <div class="name">${pokemon.name}</div>
-                <div class="detail">
-                    <div class="types">
-                        <div class="type">Grass</div>
-                        <div class="type">Poison</div>
-                    </div>
-                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/1.svg">
-                </div>
-            </li>
-
+        <div class="type ${types.type.name}">${types.type.name}</div>
     `
 }
 
-const pokemonList = document.getElementById("listao")
+function convertPokemonToLi(pokemon) {
+    return `
+    <li class="pokemon ${pokemon.types[0].type.name}">
+        <div class="number">#${pokemon.id}</div>
+        <h4 class="name">${pokemon.name}</h4>
+        <div class="detail">
+            <div class="types">
+                ${pokemon.types.map(getTypeLi).join("")}
+            </div>
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/${pokemon.id}.svg" alt="Pokemon">
+        </div>
+         
+    </li>
+    `
+}
+
+function getPokemonDetails(pokemon){
+    return fetch(pokemon.url).then((response) => response.json())
+}
 
 fetch(url)
     .then((response) => response.json())
-    .then((promise) => promise.results)
-    .then((list) => {
-        for (let i = 0; i < list.length; i++){
-            const pokemon = list[i];
-            pokemonList.innerHTML += convertPokemonToLi(pokemon);
-        }
-    })
+    .then((listaPokemons) => listaPokemons.results)
+    .then((list) => list.map(getPokemonDetails))
+    .then((details) => Promise.all(details))
+    .then((newList) => pokemonList.innerHTML = newList.map(convertPokemonToLi).join(""))
     .catch((error) => console.log(error));
+
 
 
 
